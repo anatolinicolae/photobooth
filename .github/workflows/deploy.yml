@@ -15,22 +15,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: webapp/package-lock.json
+          bun-version: latest
       
       - name: Install dependencies
         working-directory: ./webapp
-        run: npm ci
+        run: bun install --frozen-lockfile
       
       - name: Build React app
         working-directory: ./webapp
-        run: npm run build
-        env:
-          CI: true
+        run: bun run build
       
       - name: Deploy to server via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
