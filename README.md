@@ -1,6 +1,6 @@
 # Photobooth Monorepo
 
-A complete photobooth system with Arduino-controlled LED semaphore, Python backend, and React web application.
+A complete photobooth system with Arduino-controlled LED semaphore, Python backend, and web applications.
 
 ## 📁 Project Structure
 
@@ -14,10 +14,11 @@ photobooth/
 │   ├── semaphore_controller.py
 │   ├── Pipfile
 │   └── README.md
-├── webapp/                     # React web application
-│   ├── public/
-│   ├── src/
-│   ├── package.json
+├── laravel/                    # Laravel image gallery with real-time updates
+│   ├── app/
+│   ├── resources/views/        # Gallery interface
+│   ├── routes/                 # API endpoints
+│   ├── database/               # Migrations
 │   └── README.md
 └── README.md                   # This file
 ```
@@ -35,13 +36,15 @@ This photobooth system consists of three integrated components:
 ### 2. **Python Backend** (`python/`)
 - Long-running script that listens for "START" from Arduino
 - Sends countdown sequence to Arduino: "3" → "2" → "1" → "GO"
+- Can trigger photo capture and upload to Laravel API
 - Uses `pyserial` for serial communication
-- Managed with `pipenv` for dependencies
 
-### 3. **React Web App** (`webapp/`)
-- Web-based user interface for the photobooth
-- Placeholder for future features: camera preview, photo gallery, filters
-- Built with React and Create React App
+### 3. **Laravel Image Gallery** (`laravel/`)
+- **Image Upload** - PNG and GIF support (up to 10MB)
+- **REST API** - Upload, list, and delete endpoints
+- **Real-time Updates** - Server-Sent Events (SSE) for live gallery updates
+- **Simple Frontend** - Responsive gallery with automatic updates
+- **Local Storage** - Images stored in filesystem with database tracking
 
 ## 🔧 Quick Start
 
@@ -49,7 +52,8 @@ This photobooth system consists of three integrated components:
 
 - **Arduino IDE** - for uploading Arduino sketch
 - **Python 3.x** - for running the backend
-- **Node.js & npm** - for running the web app
+- **PHP 8.2+** - for Laravel application
+- **Composer** - PHP dependency manager
 - **pipenv** - Python dependency management (`pip install pipenv`)
 
 ### Setup Instructions
@@ -99,22 +103,22 @@ python semaphore_controller.py --port /dev/cu.usbmodem14101
 
 See `python/README.md` for more options and troubleshooting.
 
-#### 3. Web App Setup (Optional)
+#### 3. Laravel Image Gallery Setup
 
 ```bash
-# Navigate to webapp project
-cd webapp
+# Navigate to Laravel app
+cd laravel
 
 # Install dependencies
-npm install
+composer install
 
-# Start development server
-npm start
+# Start the development server
+php artisan serve
 
-# Opens at http://localhost:3000
+# Open http://localhost:8000
 ```
 
-See `webapp/README.md` for build and deployment instructions.
+The application is pre-configured with SQLite database and ready to use. See `laravel/README.md` for API documentation and advanced configuration.
 
 ## 🎯 How It Works
 
@@ -144,6 +148,25 @@ See `webapp/README.md` for build and deployment instructions.
 - Baud Rate: 9600
 - Line Ending: Newline (`\n`)
 
+## 🖼️ Laravel Image Gallery API
+
+### Endpoints
+
+- `POST /api/images` - Upload image (PNG/GIF)
+- `GET /api/images` - List last 50 images
+- `DELETE /api/images/{id}` - Delete image by ID
+- `GET /api/events` - Server-Sent Events stream for real-time updates
+
+### Frontend Features
+
+- Real-time gallery updates via SSE
+- Drag-and-drop image upload
+- Responsive grid layout
+- Connection status indicator
+- Smooth animations
+
+See `laravel/README.md` for complete API documentation and usage examples.
+
 ## 🛠️ Development
 
 ### Testing the System
@@ -154,6 +177,7 @@ See `webapp/README.md` for build and deployment instructions.
    - Arduino Serial Monitor: `START`
    - Python terminal: Countdown sequence
    - LEDs: Sequential countdown pattern
+4. **Start Laravel app** - visit `http://localhost:8000` to view the gallery
 
 ### Project-Specific Commands
 
@@ -161,30 +185,40 @@ Each project has its own README with detailed instructions:
 
 - **Arduino**: See `arduino/README.md`
 - **Python**: See `python/README.md`
-- **Web App**: See `webapp/README.md`
+- **Laravel**: See `laravel/README.md`
 
-## � Deployment
+## 🚀 Deployment
 
-The React web app includes automatic deployment via GitHub Actions. When you push to the `main` or `anatoli/deploy-to-prod` branch, the workflow will:
+### Laravel Deployment
 
-1. Build the React app
-2. Transfer build assets via SFTP to your server
+The Laravel application can be deployed to various platforms:
 
-**Setup required secrets in GitHub:**
-- `SFTP_HOST` - Server hostname or IP
-- `SFTP_USER` - SSH/SFTP username  
-- `SFTP_PASS` - SSH/SFTP password
+- **Laravel Forge** - Automated Laravel deployment
+- **Ploi** - Modern hosting platform
+- **DigitalOcean App Platform** - Easy deployment
+- **AWS/Heroku** - Traditional cloud platforms
 
-See `.github/DEPLOYMENT.md` for detailed deployment configuration and troubleshooting.
+**Build for production:**
+```bash
+cd laravel
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
 
-## �📝 Future Enhancements
+See `laravel/README.md` for detailed deployment configuration.
 
-- [ ] Integrate camera capture triggered by countdown
-- [ ] Web app displays live countdown synchronized with LEDs
-- [ ] WebSocket connection between Python and React app
-- [ ] Photo gallery and sharing features
+## 📝 Future Enhancements
+
+- [x] Laravel image gallery with real-time updates
+- [x] REST API for image management
+- [x] Server-Sent Events for live updates
+- [ ] Python integration to upload photos after countdown
+- [ ] Camera capture triggered by Arduino countdown
+- [ ] Live countdown display synchronized with LEDs
+- [ ] Photo filters and effects
 - [ ] Print queue management
-- [ ] Custom countdown timing configuration
+- [ ] Social media sharing
 - [ ] Multiple language support
 
 ## 🐛 Troubleshooting
@@ -213,6 +247,13 @@ python semaphore_controller.py --port /dev/cu.usbmodem14101
 - Test LEDs with a simple Arduino blink sketch
 - Check resistor values (220Ω recommended)
 
+### Laravel issues
+
+- Ensure PHP 8.2+ is installed: `php -v`
+- Check storage permissions: `chmod -R 775 storage bootstrap/cache`
+- Clear cache: `php artisan cache:clear`
+- Re-create storage link: `php artisan storage:link`
+
 ## 📄 License
 
 This project is open source. Feel free to use and modify as needed.
@@ -222,5 +263,5 @@ This project is open source. Feel free to use and modify as needed.
 Built with:
 - [Arduino](https://www.arduino.cc/)
 - [Python](https://www.python.org/) & [PySerial](https://pyserial.readthedocs.io/)
-- [React](https://reactjs.org/)
-- [Create React App](https://create-react-app.dev/)
+- [Laravel](https://laravel.com/)
+- [PHP](https://www.php.net/)
