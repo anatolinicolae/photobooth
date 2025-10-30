@@ -163,7 +163,21 @@ Each project has its own README with detailed instructions:
 - **Python**: See `python/README.md`
 - **Web App**: See `webapp/README.md`
 
-## 📝 Future Enhancements
+## � Deployment
+
+The React web app includes automatic deployment via GitHub Actions. When you push to the `main` or `anatoli/deploy-to-prod` branch, the workflow will:
+
+1. Build the React app
+2. Transfer build assets via SFTP to your server
+
+**Setup required secrets in GitHub:**
+- `SFTP_HOST` - Server hostname or IP
+- `SFTP_USER` - SSH/SFTP username  
+- `SFTP_PASS` - SSH/SFTP password
+
+See `.github/DEPLOYMENT.md` for detailed deployment configuration and troubleshooting.
+
+## �📝 Future Enhancements
 
 - [ ] Integrate camera capture triggered by countdown
 - [ ] Web app displays live countdown synchronized with LEDs

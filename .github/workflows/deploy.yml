@@ -1,0 +1,49 @@
+name: Build and Deploy React App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: webapp/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./webapp
+        run: npm ci
+      
+      - name: Build React app
+        working-directory: ./webapp
+        run: npm run build
+        env:
+          CI: true
+      
+      - name: Deploy to server via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          username: ${{ secrets.SFTP_USER }}
+          server: ${{ secrets.SFTP_HOST }}
+          password: ${{ secrets.SFTP_PASS }}
+          local_path: './webapp/build/*'
+          remote_path: ${{ secrets.REMOTE_PATH }}
+          sftp_only: true
+          delete_remote_files: false
+      
+      - name: Deployment complete
+        run: |
+          echo "✅ React app built and deployed successfully!"
+          echo "Build artifacts transferred to destination server."
