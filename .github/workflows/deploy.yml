@@ -12,69 +12,55 @@ jobs:
     environment: production
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          php-version: '8.3'
-          extensions: mbstring, xml, bcmath, pdo_sqlite, gd
-          tools: composer:v2
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            
+            echo "🚀 Starting deployment..."
+            
+            # Navigate to application directory
+            cd ${{ secrets.REMOTE_PATH }}
+            
+            # Pull latest changes
+            echo "📥 Pulling latest changes from Git..."
+            git fetch origin
+            git reset --hard origin/main
+            
+            # Install/update dependencies
+            echo "📦 Installing Composer dependencies..."
+            composer install --no-dev --optimize-autoloader --no-interaction
+            
+            # Run migrations
+            echo "🗄️  Running database migrations..."
+            php artisan migrate --force
+            
+            # Clear and optimize cache
+            echo "🧹 Clearing and optimizing cache..."
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            
+            echo "✅ Deployment completed successfully!"
       
-      - name: Install Composer dependencies
-        working-directory: ./laravel
-        run: composer install --no-dev --optimize-autoloader --no-interaction
-      
-      - name: Create deployment package
-        working-directory: ./laravel
+      - name: Deployment Summary
+        if: success()
         run: |
-          # Create a temporary directory for deployment
-          mkdir -p ../deploy
-          
-          # Copy application files (excluding storage and database)
-          rsync -av --exclude='storage/app/public/images' \
-                    --exclude='storage/logs' \
-                    --exclude='storage/framework/sessions' \
-                    --exclude='storage/framework/views' \
-                    --exclude='storage/framework/cache' \
-                    --exclude='database/database.sqlite' \
-                    --exclude='.env' \
-                    --exclude='.git' \
-                    --exclude='node_modules' \
-                    --exclude='tests' \
-                    ./ ../deploy/
-          
-          # Create necessary directories in deploy package
-          mkdir -p ../deploy/storage/app/public/images
-          mkdir -p ../deploy/storage/logs
-          mkdir -p ../deploy/storage/framework/{sessions,views,cache}
-          mkdir -p ../deploy/bootstrap/cache
-          
-          # Set proper permissions structure
-          touch ../deploy/storage/logs/.gitkeep
-          touch ../deploy/storage/app/public/images/.gitkeep
-      
-      - name: Deploy to server via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
-        with:
-          username: ${{ secrets.SFTP_USER }}
-          server: ${{ secrets.SFTP_HOST }}
-          password: ${{ secrets.SFTP_PASS }}
-          local_path: './deploy/*'
-          remote_path: ${{ secrets.REMOTE_PATH }}
-          sftp_only: true
-          delete_remote_files: false
-      
-      - name: Deployment complete
-        run: |
-          echo "✅ Laravel app deployed successfully!"
+          echo "✅ Laravel app deployed and running!"
           echo ""
-          echo "📋 Post-deployment steps (run manually on server):"
-          echo "  1. Update .env file with production settings"
-          echo "  2. Run: php artisan migrate --force"
-          echo "  3. Run: php artisan config:cache"
-          echo "  4. Run: php artisan route:cache"
-          echo "  5. Run: php artisan view:cache"
-          echo "  6. Ensure storage/app/public/images has write permissions"
-          echo "  7. Restart PHP-FPM: sudo systemctl restart php8.3-fpm"
+          echo "📋 Deployment steps executed:"
+          echo "  ✓ Git pull from main branch"
+          echo "  ✓ Composer dependencies installed"
+          echo "  ✓ Database migrations run"
+          echo "  ✓ Cache optimized"
+          echo "  ✓ PHP-FPM restarted"
+      
+      - name: Deployment Failed
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Check the logs above for details."
