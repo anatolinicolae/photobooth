@@ -1,4 +1,4 @@
-name: Build and Deploy React App
+name: Deploy Laravel App
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     environment: production
     
@@ -15,18 +15,45 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
-          bun-version: latest
+          php-version: '8.3'
+          extensions: mbstring, xml, bcmath, pdo_sqlite, gd
+          tools: composer:v2
       
-      - name: Install dependencies
-        working-directory: ./webapp
-        run: bun install --frozen-lockfile
+      - name: Install Composer dependencies
+        working-directory: ./laravel
+        run: composer install --no-dev --optimize-autoloader --no-interaction
       
-      - name: Build React app
-        working-directory: ./webapp
-        run: bun run build
+      - name: Create deployment package
+        working-directory: ./laravel
+        run: |
+          # Create a temporary directory for deployment
+          mkdir -p ../deploy
+          
+          # Copy application files (excluding storage and database)
+          rsync -av --exclude='storage/app/public/images' \
+                    --exclude='storage/logs' \
+                    --exclude='storage/framework/sessions' \
+                    --exclude='storage/framework/views' \
+                    --exclude='storage/framework/cache' \
+                    --exclude='database/database.sqlite' \
+                    --exclude='.env' \
+                    --exclude='.git' \
+                    --exclude='node_modules' \
+                    --exclude='tests' \
+                    ./ ../deploy/
+          
+          # Create necessary directories in deploy package
+          mkdir -p ../deploy/storage/app/public/images
+          mkdir -p ../deploy/storage/logs
+          mkdir -p ../deploy/storage/framework/{sessions,views,cache}
+          mkdir -p ../deploy/bootstrap/cache
+          
+          # Set proper permissions structure
+          touch ../deploy/storage/logs/.gitkeep
+          touch ../deploy/storage/app/public/images/.gitkeep
       
       - name: Deploy to server via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
@@ -34,12 +61,20 @@ jobs:
           username: ${{ secrets.SFTP_USER }}
           server: ${{ secrets.SFTP_HOST }}
           password: ${{ secrets.SFTP_PASS }}
-          local_path: './webapp/build/*'
+          local_path: './deploy/*'
           remote_path: ${{ secrets.REMOTE_PATH }}
           sftp_only: true
           delete_remote_files: false
       
       - name: Deployment complete
         run: |
-          echo "✅ React app built and deployed successfully!"
-          echo "Build artifacts transferred to destination server."
+          echo "✅ Laravel app deployed successfully!"
+          echo ""
+          echo "📋 Post-deployment steps (run manually on server):"
+          echo "  1. Update .env file with production settings"
+          echo "  2. Run: php artisan migrate --force"
+          echo "  3. Run: php artisan config:cache"
+          echo "  4. Run: php artisan route:cache"
+          echo "  5. Run: php artisan view:cache"
+          echo "  6. Ensure storage/app/public/images has write permissions"
+          echo "  7. Restart PHP-FPM: sudo systemctl restart php8.3-fpm"
