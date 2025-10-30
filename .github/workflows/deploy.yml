@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - anatoli/deploy-to-prod
   workflow_dispatch:
 
 jobs:
