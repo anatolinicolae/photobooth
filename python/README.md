@@ -1,6 +1,6 @@
-# Python Semaphore Controller
+# Python Photobooth Controller
 
-This Python application controls the photobooth semaphore countdown sequence via serial communication with the Arduino.
+This Python application controls the photobooth countdown sequence via serial communication with the Arduino.
 
 ## Features
 

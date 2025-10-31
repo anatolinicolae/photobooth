@@ -1,14 +1,14 @@
 # Photobooth Monorepo
 
-A complete photobooth system with Arduino-controlled LED semaphore, Python backend, and web applications.
+A complete photobooth system with Arduino-controlled LED countdown, Python backend, and web applications.
 
 ## 📁 Project Structure
 
 ```
 photobooth/
-├── arduino/                    # Arduino LED semaphore controller
-│   ├── photobooth_semaphore/
-│   │   └── photobooth_semaphore.ino
+├── arduino/                    # Arduino LED countdown controller
+│   ├── photobooth/
+│   │   └── photobooth.ino
 │   └── README.md
 ├── python/                     # Python serial communication backend
 │   ├── photobooth.py
@@ -31,7 +31,7 @@ This photobooth system consists of three integrated components:
 - Controls a button and 4 LEDs for a visual countdown
 - Sends "START" command via serial when button is pressed
 - Receives countdown commands ("3", "2", "1", "GO") to control LEDs
-- Hardware semaphore provides visual feedback
+- Hardware countdown provides visual feedback
 
 ### 2. **Python Backend** (`python/`)
 - Long-running script that listens for "START" from Arduino
@@ -64,7 +64,7 @@ This photobooth system consists of three integrated components:
 # Navigate to Arduino project
 cd arduino
 
-# Open photobooth_semaphore/photobooth_semaphore.ino in Arduino IDE
+# Open photobooth/photobooth.ino in Arduino IDE
 # Connect your Arduino via USB
 # Select board and port in Arduino IDE
 # Upload the sketch

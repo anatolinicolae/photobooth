@@ -1,7 +1,7 @@
 ````markdown
 # Arduino Photobooth
 
-This Arduino project controls a button-triggered LED semaphore for a photobooth countdown system.
+This Arduino project controls a button-triggered LED countdown for a photobooth system.
 
 ## Hardware Requirements
 
