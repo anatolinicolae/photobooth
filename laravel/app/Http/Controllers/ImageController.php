@@ -81,7 +81,7 @@ class ImageController extends Controller
     }
 
     /**
-     * Delete an image by ID
+     * Delete an image by ID (soft delete)
      */
     public function delete($id)
     {
@@ -93,10 +93,7 @@ class ImageController extends Controller
             ], 404);
         }
 
-        // Delete the file from storage
-        Storage::disk('public')->delete($image->path);
-
-        // Delete the database record
+        // Soft delete the database record (keeps the file on server)
         $image->delete();
 
         // Broadcast the delete event
