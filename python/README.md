@@ -29,6 +29,44 @@ pipenv install
 
 This will create a virtual environment and install:
 - `pyserial` - for serial communication with Arduino
+- `opencv-python` - for camera capture
+- `pillow` - for GIF creation
+- `requests` - for API uploads
+- `python-dotenv` - for environment configuration
+
+### Configure API settings
+
+1. Copy the example environment file:
+```bash
+cp .env.example .env
+```
+
+2. Generate an API token in the Laravel application:
+```bash
+cd ../laravel
+# For local development:
+php artisan token:generate
+
+# For Docker:
+docker-compose exec app php artisan token:generate
+```
+
+3. Edit `.env` and configure your settings:
+```bash
+# For local Laravel development
+API_UPLOAD_ENDPOINT=http://localhost:8000/api/images
+API_AUTH_TOKEN=paste_your_generated_token_here
+
+# For Docker
+API_UPLOAD_ENDPOINT=http://localhost:8080/api/images
+API_AUTH_TOKEN=paste_your_generated_token_here
+
+# For production
+API_UPLOAD_ENDPOINT=https://your-domain.com/api/images
+API_AUTH_TOKEN=paste_your_generated_token_here
+```
+
+**Important:** Make sure the token has the `upload` ability when you generate it!
 
 ## Usage
 
