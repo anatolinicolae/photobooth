@@ -38,6 +38,10 @@
             column-gap: 20px;
         }
 
+        .gallery.empty {
+            column-count: 1;
+        }
+
         @media (max-width: 1200px) {
             .gallery {
                 column-count: 3;
@@ -125,9 +129,27 @@
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #ff6b35;
-            font-size: 18px;
-            grid-column: 1 / -1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .empty-state img {
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+            opacity: 0.6;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
         }
 
         .connection-status {
@@ -171,7 +193,9 @@
         <h1>🎃 Mollieween Scary Shots 👻</h1>
 
         <div class="gallery" id="gallery">
-            <div class="empty-state">Loading images...</div>
+            <div class="empty-state">
+                <img src="/resources/images/ghost.png" alt="No photos yet">
+            </div>
         </div>
     </div>
 
@@ -201,10 +225,12 @@
         // Display images in gallery
         function displayImages(images) {
             if (images.length === 0) {
-                gallery.innerHTML = '<div class="empty-state">No images yet. Upload your first photo!</div>';
+                gallery.classList.add('empty');
+                gallery.innerHTML = '<div class="empty-state"><img src="/images/ghost.png" alt="No photos yet"></div>';
                 return;
             }
 
+            gallery.classList.remove('empty');
             gallery.innerHTML = images.map(image => createImageCard(image)).join('');
         }
 
@@ -294,6 +320,7 @@
         function addImageToGallery(image) {
             const emptyState = gallery.querySelector('.empty-state');
             if (emptyState) {
+                gallery.classList.remove('empty');
                 gallery.innerHTML = '';
             }
 
@@ -319,7 +346,8 @@
                     
                     // Show empty state if no images left
                     if (gallery.children.length === 0) {
-                        gallery.innerHTML = '<div class="empty-state">No images yet. Upload your first photo!</div>';
+                        gallery.classList.add('empty');
+                        gallery.innerHTML = '<div class="empty-state"><img src="/resources/images/ghost.png" alt="No photos yet"></div>';
                     }
                 }, 500);
             }
