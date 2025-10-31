@@ -88,15 +88,87 @@ php artisan serve
 
 5. Visit `http://localhost:8000` in your browser
 
+## User & API Token Management
+
+This application uses Artisan commands to manage users and API tokens instead of a web interface.
+
+### Create a User
+
+```bash
+# Interactive mode (recommended)
+php artisan user:create
+
+# With options
+php artisan user:create --email=admin@example.com --password=secret123 --name="Admin User"
+
+# Docker
+docker-compose exec app php artisan user:create
+```
+
+### Generate an API Token
+
+```bash
+# Interactive mode (recommended)
+php artisan token:generate
+
+# With options
+php artisan token:generate --email=admin@example.com --name="Arduino Token" --abilities=upload,delete
+
+# Docker
+docker-compose exec app php artisan token:generate
+```
+
+**Available abilities:** `upload`, `delete` (or both)
+
+**Important:** The token is displayed only once. Save it immediately!
+
+### List API Tokens
+
+```bash
+# List tokens for a specific user
+php artisan token:list --email=admin@example.com
+
+# List all tokens for all users
+php artisan token:list --all
+
+# Docker
+docker-compose exec app php artisan token:list --all
+```
+
+### Revoke API Tokens
+
+```bash
+# Interactive mode - select which token to revoke
+php artisan token:revoke --email=admin@example.com
+
+# Revoke a specific token by ID
+php artisan token:revoke --id=1
+
+# Revoke all tokens for a user
+php artisan token:revoke --email=admin@example.com --all
+
+# Docker
+docker-compose exec app php artisan token:revoke --email=admin@example.com
+```
+
 ## API Endpoints
+
+### API Authentication
+
+Most API endpoints require authentication using API tokens. Include the token in the `Authorization` header as a Bearer token:
+
+```
+Authorization: Bearer YOUR_API_TOKEN_HERE
+```
 
 ### Upload Image
 ```
 POST /api/images
+Authorization: Bearer YOUR_API_TOKEN_HERE
 Content-Type: multipart/form-data
 
 Parameters:
-- image: File (PNG or GIF, max 10MB)
+- image: File (PNG, GIF, or JPG, max 100MB)
 
 Response (201):
 {
@@ -132,9 +204,13 @@ Response (200):
 }
 ```
 
+**Note:** This endpoint does not require authentication and is publicly accessible.
+
+
 ### Delete Image
 ```
 DELETE /api/images/{id}
+Authorization: Bearer YOUR_API_TOKEN_HERE
 
 Response (200):
 {
@@ -144,6 +220,18 @@ Response (200):
 Response (404):
 {
   "error": "Image not found"
+}
+
+Response (401):
+{
+  "error": "Unauthorized",
+  "message": "API token required. Please provide a valid Bearer token in the Authorization header."
+}
+
+Response (403):
+{
+  "error": "Forbidden",
+  "message": "This token does not have the required 'delete' permission."
 }
 ```
 
@@ -176,14 +264,34 @@ Images are stored in `storage/app/public/images/` and are accessible via the `/s
 
 ## Database Schema
 
+### Users Table
+- `id`: Primary key
+- `name`: User name
+- `email`: User email (unique)
+- `password`: Hashed password
+- `created_at`: Timestamp
+- `updated_at`: Timestamp
+
+### API Tokens Table
+- `id`: Primary key
+- `user_id`: Foreign key to users table
+- `name`: Token description/name
+- `token`: SHA-256 hashed token (64 characters)
+- `abilities`: JSON array of permissions (upload, delete, or *)
+- `last_used_at`: Last time the token was used
+- `expires_at`: Optional expiration timestamp
+- `created_at`: Timestamp
+- `updated_at`: Timestamp
+
 ### Images Table
 - `id`: Primary key
 - `filename`: Original filename
 - `path`: Storage path
-- `mime_type`: Image MIME type (image/png or image/gif)
+- `mime_type`: Image MIME type (image/png, image/gif, or image/jpeg)
 - `size`: File size in bytes
 - `created_at`: Timestamp
 - `updated_at`: Timestamp
+- `deleted_at`: Soft delete timestamp (nullable)
 
 ## Configuration
 
@@ -237,28 +345,55 @@ docker-compose logs -f app
 
 You can test the API using cURL:
 
-Upload an image (adjust port for Docker):
+### Setup: Create a user and generate an API token
+
+```bash
+# Create a user (interactive)
+php artisan user:create
+# Or with Docker:
+docker-compose exec app php artisan user:create
+
+# Generate an API token (interactive)
+php artisan token:generate
+# Or with Docker:
+docker-compose exec app php artisan token:generate
+
+# Save the token that is displayed - you'll need it for authenticated requests!
+```
+
+### Upload an image (requires authentication):
+
+**Important:** Use the `Authorization` header with `Bearer` prefix (NOT in the query string):
+
 ```bash
 # Local development
 curl -X POST http://localhost:8000/api/images \
+  -H "Authorization: Bearer YOUR_API_TOKEN_HERE" \
   -F "image=@/path/to/image.png"
 
 # Docker
 curl -X POST http://localhost:8080/api/images \
+  -H "Authorization: Bearer YOUR_API_TOKEN_HERE" \
   -F "image=@/path/to/image.jpg"
+
+# Example with a real token:
+curl -X POST http://localhost:8080/api/images \
+  -H "Authorization: Bearer a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2" \
+  -F "image=@photo.png"
 ```
 
-List images:
+### List images (public):
 ```bash
 curl http://localhost:8080/api/images
 ```
 
-Delete an image:
+### Delete an image (requires authentication):
 ```bash
-curl -X DELETE http://localhost:8080/api/images/1
+curl -X DELETE http://localhost:8080/api/images/1 \
+  -H "Authorization: Bearer YOUR_API_TOKEN_HERE"
 ```
 
-Subscribe to events:
+### Subscribe to events (public):
 ```bash
 curl -N http://localhost:8080/api/events
 ```
