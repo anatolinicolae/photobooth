@@ -5,6 +5,10 @@ name = "pypi"
 
 [packages]
 pyserial = "*"
+opencv-python = "*"
+pillow = "*"
+python-dotenv = "*"
+requests = "*"
 
 [dev-packages]
 pylint = "*"
