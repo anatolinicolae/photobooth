@@ -140,14 +140,19 @@ class PhotoboothController:
                 print(f"✓ Released camera {i}")
         self.cameras = []
     
-    def capture_images(self):
+    def capture_images(self, timestamp=None):
         """
         Capture images from all cameras.
+        
+        Args:
+            timestamp (str): Optional timestamp to use for filenames. If None, generates a new one.
         
         Returns:
             list: List of captured image file paths
         """
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        if timestamp is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
         captured_files = []
         
         print("\n📸 Capturing images...")
@@ -174,7 +179,7 @@ class PhotoboothController:
         
         Args:
             image_files (list): List of image file paths
-            output_filename (str): Output GIF filename (optional)
+            output_filename (str): Output GIF filename (required in normal use)
             
         Returns:
             str: Path to created GIF file
@@ -183,9 +188,11 @@ class PhotoboothController:
             print("✗ No images to create GIF")
             return None
         
+        # Generate filename only if not provided (for backward compatibility)
         if output_filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_filename = f"{self.output_dir}/photobooth_{timestamp}.gif"
+            print(f"⚠️  Warning: No output filename provided, generated: {output_filename}")
         
         print(f"\n🎬 Creating GIF with {len(image_files)} frames...")
         
@@ -316,12 +323,16 @@ class PhotoboothController:
         self.send_command("GO")
         time.sleep(0.5)  # Small delay before capturing
         
-        # Capture images from all cameras
-        captured_files = self.capture_images()
+        # Generate a single timestamp for this photo session
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        # Create GIF from captured images
+        # Capture images from all cameras
+        captured_files = self.capture_images(timestamp)
+        
+        # Create GIF from captured images with the same timestamp
         if captured_files:
-            gif_file = self.create_gif(captured_files)
+            gif_filename = f"{self.output_dir}/photobooth_{timestamp}.gif"
+            gif_file = self.create_gif(captured_files, gif_filename)
             if gif_file:
                 print(f"🎉 Photobooth complete! GIF: {gif_file}")
                 
