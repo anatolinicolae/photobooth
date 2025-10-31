@@ -134,25 +134,30 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 10px 20px;
+            padding: 6px 12px;
             border-radius: 20px;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            font-size: 14px;
+            font-size: 12px;
             display: flex;
             align-items: center;
             gap: 10px;
+            border: 1px solid oklch(39.3% 0.095 152.535);
+            color: oklch(72.3% 0.219 149.579);
+        }
+
+        .connection-status.disconnected {
+            border: 1px solid oklch(39.6% 0.141 25.723);
+            color: oklch(63.7% 0.237 25.331);
         }
 
         .status-indicator {
-            width: 10px;
-            height: 10px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            background: #28a745;
+            background: oklch(72.3% 0.219 149.579);
         }
 
-        .status-indicator.disconnected {
-            background: #dc3545;
+        .connection-status.disconnected .status-indicator {
+            background: oklch(63.7% 0.237 25.331);
         }
     </style>
 </head>
@@ -172,6 +177,7 @@
 
     <script>
         const gallery = document.getElementById('gallery');
+        const connectionStatus = document.querySelector('.connection-status');
         const connectionIndicator = document.getElementById('connectionIndicator');
         const connectionText = document.getElementById('connectionText');
 
@@ -255,13 +261,13 @@
 
             eventSource.onopen = () => {
                 console.log('SSE connection established');
-                connectionIndicator.classList.remove('disconnected');
+                connectionStatus.classList.remove('disconnected');
                 connectionText.textContent = 'Connected';
             };
 
             eventSource.onerror = () => {
                 console.error('SSE connection error');
-                connectionIndicator.classList.add('disconnected');
+                connectionStatus.classList.add('disconnected');
                 connectionText.textContent = 'Disconnected';
                 
                 // Reconnect after 5 seconds
