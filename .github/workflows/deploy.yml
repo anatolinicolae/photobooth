@@ -30,6 +30,9 @@ jobs:
             echo "📥 Pulling latest changes from Git..."
             git fetch origin
             git reset --hard origin/main
+
+            # Navigate to module directory
+            cd laravel
             
             # Install/update dependencies
             echo "📦 Installing Composer dependencies..."
