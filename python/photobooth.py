@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Photobooth Semaphore Controller
+Photobooth Controller
 
-This script manages the LED semaphore countdown sequence for the photobooth.
+This script manages the LED countdown sequence for the photobooth.
 It listens for a "START" command from the Arduino via serial communication,
 then sends back the countdown sequence: "3", "2", "1", "GO".
 
@@ -27,8 +27,8 @@ import requests
 from dotenv import load_dotenv
 
 
-class SemaphoreController:
-    """Controls the photobooth semaphore sequence via serial communication."""
+class PhotoboothController:
+    """Controls the photobooth countdown sequence via serial communication."""
     
     def __init__(self, port, baudrate=9600, countdown_delay=1.0):
         """
@@ -354,7 +354,7 @@ class SemaphoreController:
                 time.sleep(0.1)  # Small delay to prevent CPU spinning
                 
         except KeyboardInterrupt:
-            print("\n\n⏹  Stopping semaphore controller...")
+            print("\n\n⏹  Stopping photobooth controller...")
             self.running = False
 
 
@@ -376,9 +376,9 @@ def get_default_port():
 
 
 def main():
-    """Main entry point for the semaphore controller."""
+    """Main entry point for the photobooth controller."""
     parser = argparse.ArgumentParser(
-        description="Photobooth Semaphore Controller - Controls LED countdown via Arduino"
+        description="Photobooth Controller - Controls LED countdown via Arduino"
     )
     parser.add_argument(
         "--port",
@@ -424,7 +424,7 @@ def main():
     port = args.port if args.port else get_default_port()
     
     print("=" * 60)
-    print("  PHOTOBOOTH SEMAPHORE CONTROLLER")
+    print("  PHOTOBOOTH CONTROLLER")
     print("=" * 60)
     print(f"\nConfiguration:")
     print(f"  Port: {port}")
@@ -432,7 +432,7 @@ def main():
     print(f"  Countdown Delay: {args.delay}s\n")
     
     # Create and run controller
-    controller = SemaphoreController(port, args.baud, args.delay)
+    controller = PhotoboothController(port, args.baud, args.delay)
     
     if controller.connect():
         try:

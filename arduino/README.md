@@ -1,4 +1,5 @@
-# Arduino Photobooth Semaphore
+````markdown
+# Arduino Photobooth
 
 This Arduino project controls a button-triggered LED semaphore for a photobooth countdown system.
 
@@ -38,7 +39,7 @@ LEDs (with 220Ω resistors):
 ## Installation
 
 1. Open the Arduino IDE
-2. Open `photobooth_semaphore/photobooth_semaphore.ino`
+2. Open `photobooth/photobooth.ino`
 3. Select your Arduino board from Tools > Board
 4. Select the correct port from Tools > Port
 5. Click Upload
