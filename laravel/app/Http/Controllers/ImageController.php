@@ -6,7 +6,6 @@ use App\Models\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Cache;
 
 class ImageController extends Controller
 {
@@ -36,19 +35,6 @@ class ImageController extends Controller
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
         ]);
-
-        // Broadcast the new image event with formatted data
-        Cache::put('image_event', json_encode([
-            'type' => 'created',
-            'image' => [
-                'id' => $image->id,
-                'filename' => $image->filename,
-                'url' => asset('storage/' . $image->path),
-                'mime_type' => $image->mime_type,
-                'size' => $image->size,
-                'created_at' => $image->created_at->toIso8601String(),
-            ]
-        ]), 5);
 
         return response()->json([
             'message' => 'Image uploaded successfully',
@@ -96,12 +82,6 @@ class ImageController extends Controller
         // Soft delete the database record (keeps the file on server)
         $image->delete();
 
-        // Broadcast the delete event
-        Cache::put('image_event', json_encode([
-            'type' => 'deleted',
-            'id' => $id
-        ]), 5);
-
         return response()->json([
             'message' => 'Image deleted successfully'
         ]);
@@ -123,23 +103,13 @@ class ImageController extends Controller
             ignore_user_abort(true);
             
             while (true) {
-                // Check for new events
-                $event = Cache::get('image_event');
-                
-                if ($event) {
-                    echo "data: {$event}\n\n";
-                    if (ob_get_level()) ob_flush();
-                    flush();
-                    Cache::forget('image_event');
-                }
-                
                 // Keep connection alive with heartbeat
                 echo ": heartbeat\n\n";
                 if (ob_get_level()) ob_flush();
                 flush();
                 
                 // Sleep for a short time to prevent excessive CPU usage
-                usleep(500000); // 0.5 seconds instead of 1
+                usleep(500000); // 0.5 seconds
                 
                 // Check if client disconnected
                 if (connection_aborted()) {
