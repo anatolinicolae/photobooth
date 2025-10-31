@@ -25,6 +25,7 @@ from datetime import datetime
 import os
 import requests
 from dotenv import load_dotenv
+import uuid
 
 
 class PhotoboothController:
@@ -140,18 +141,18 @@ class PhotoboothController:
                 print(f"✓ Released camera {i}")
         self.cameras = []
     
-    def capture_images(self, timestamp=None):
+    def capture_images(self, session_id=None):
         """
         Capture images from all cameras.
         
         Args:
-            timestamp (str): Optional timestamp to use for filenames. If None, generates a new one.
+            session_id (str): Optional unique session ID to use for filenames. If None, generates a new one.
         
         Returns:
             list: List of captured image file paths
         """
-        if timestamp is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        if session_id is None:
+            session_id = str(uuid.uuid4())
         
         captured_files = []
         
@@ -164,7 +165,7 @@ class PhotoboothController:
                 
                 if ret:
                     # Save image
-                    filename = f"{self.output_dir}/cam{i}_{timestamp}.jpg"
+                    filename = f"{self.output_dir}/cam{i}_{session_id}.jpg"
                     cv2.imwrite(filename, frame)
                     captured_files.append(filename)
                     print(f"  ✓ Camera {i}: {filename}")
@@ -190,8 +191,8 @@ class PhotoboothController:
         
         # Generate filename only if not provided (for backward compatibility)
         if output_filename is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_filename = f"{self.output_dir}/photobooth_{timestamp}.gif"
+            session_id = str(uuid.uuid4())
+            output_filename = f"{self.output_dir}/photobooth_{session_id}.gif"
             print(f"⚠️  Warning: No output filename provided, generated: {output_filename}")
         
         print(f"\n🎬 Creating GIF with {len(image_files)} frames...")
@@ -323,15 +324,16 @@ class PhotoboothController:
         self.send_command("GO")
         time.sleep(0.5)  # Small delay before capturing
         
-        # Generate a single timestamp for this photo session
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Generate a unique session ID for this photo session
+        session_id = str(uuid.uuid4())
+        print(f"📋 Session ID: {session_id}")
         
         # Capture images from all cameras
-        captured_files = self.capture_images(timestamp)
+        captured_files = self.capture_images(session_id)
         
-        # Create GIF from captured images with the same timestamp
+        # Create GIF from captured images with the same session ID
         if captured_files:
-            gif_filename = f"{self.output_dir}/photobooth_{timestamp}.gif"
+            gif_filename = f"{self.output_dir}/photobooth_{session_id}.gif"
             gif_file = self.create_gif(captured_files, gif_filename)
             if gif_file:
                 print(f"🎉 Photobooth complete! GIF: {gif_file}")
