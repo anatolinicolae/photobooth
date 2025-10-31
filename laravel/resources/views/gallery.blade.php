@@ -205,7 +205,9 @@
         const connectionIndicator = document.getElementById('connectionIndicator');
         const connectionText = document.getElementById('connectionText');
 
-        let eventSource = null;
+        let lastImageId = 0;
+        let currentImageIds = new Set();
+        let pollInterval = null;
 
         // Get CSRF token
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
@@ -216,9 +218,23 @@
                 const response = await fetch('/api/images');
                 const data = await response.json();
                 displayImages(data.images);
+                
+                // Track current images
+                currentImageIds.clear();
+                data.images.forEach(img => currentImageIds.add(img.id));
+                
+                // Track the latest image ID
+                if (data.images.length > 0) {
+                    lastImageId = data.images[0].id;
+                }
+                
+                connectionStatus.classList.remove('disconnected');
+                connectionText.textContent = 'Connected';
             } catch (error) {
                 console.error('Error loading images:', error);
                 gallery.innerHTML = '<div class="empty-state">Error loading images</div>';
+                connectionStatus.classList.add('disconnected');
+                connectionText.textContent = 'Disconnected';
             }
         }
 
@@ -271,7 +287,8 @@
                     throw new Error('Delete failed');
                 }
 
-                // Image will be removed via SSE
+                // Remove from DOM immediately
+                removeImageFromGallery(id);
             } catch (error) {
                 console.error('Error deleting image:', error);
                 if (card) {
@@ -281,39 +298,51 @@
             }
         };
 
-        // Set up Server-Sent Events
-        function setupEventSource() {
-            eventSource = new EventSource('/api/events');
-
-            eventSource.onopen = () => {
-                console.log('SSE connection established');
+        // Poll for changes (new images and deletions)
+        async function pollForChanges() {
+            try {
+                const response = await fetch('/api/images');
+                const data = await response.json();
+                
+                const serverImageIds = new Set(data.images.map(img => img.id));
+                
+                // Check for new images
+                if (data.images.length > 0) {
+                    const newestImageId = data.images[0].id;
+                    
+                    if (newestImageId > lastImageId) {
+                        // Add only new images
+                        const newImages = data.images.filter(img => img.id > lastImageId);
+                        newImages.reverse().forEach(image => {
+                            addImageToGallery(image);
+                        });
+                        lastImageId = newestImageId;
+                    }
+                }
+                
+                // Check for deleted images
+                currentImageIds.forEach(id => {
+                    if (!serverImageIds.has(id)) {
+                        removeImageFromGallery(id);
+                    }
+                });
+                
+                // Update current image set
+                currentImageIds = serverImageIds;
+                
                 connectionStatus.classList.remove('disconnected');
                 connectionText.textContent = 'Connected';
-            };
-
-            eventSource.onerror = () => {
-                console.error('SSE connection error');
+            } catch (error) {
+                console.error('Error polling for changes:', error);
                 connectionStatus.classList.add('disconnected');
                 connectionText.textContent = 'Disconnected';
-                
-                // Reconnect after 5 seconds
-                eventSource.close();
-                setTimeout(setupEventSource, 5000);
-            };
+            }
+        }
 
-            eventSource.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    
-                    if (data.type === 'created') {
-                        addImageToGallery(data.image);
-                    } else if (data.type === 'deleted') {
-                        removeImageFromGallery(data.id);
-                    }
-                } catch (error) {
-                    // Heartbeat or other non-JSON messages
-                }
-            };
+        // Start polling
+        function startPolling() {
+            // Poll every 2 seconds
+            pollInterval = setInterval(pollForChanges, 2000);
         }
 
         // Add new image to gallery
@@ -327,6 +356,7 @@
             const existingCard = document.querySelector(`[data-id="${image.id}"]`);
             if (!existingCard) {
                 gallery.insertAdjacentHTML('afterbegin', createImageCard(image));
+                currentImageIds.add(image.id);
             }
 
             // Keep only last 50 images
@@ -343,6 +373,7 @@
                 card.classList.add('deleting');
                 setTimeout(() => {
                     card.remove();
+                    currentImageIds.delete(id);
                     
                     // Show empty state if no images left
                     if (gallery.children.length === 0) {
@@ -355,7 +386,7 @@
 
         // Initialize
         loadImages();
-        setupEventSource();
+        startPolling();
     </script>
 </body>
 </html>
