@@ -11,7 +11,7 @@ photobooth/
 │   │   └── photobooth_semaphore.ino
 │   └── README.md
 ├── python/                     # Python serial communication backend
-│   ├── semaphore_controller.py
+│   ├── photobooth.py
 │   ├── Pipfile
 │   └── README.md
 ├── laravel/                    # Laravel image gallery with real-time updates
@@ -92,13 +92,13 @@ pipenv install
 pipenv shell
 
 # List available serial ports to find your Arduino
-python semaphore_controller.py --list-ports
+python photobooth.py --list-ports
 
 # Run the controller (auto-detects port)
-python semaphore_controller.py
+python photobooth.py
 
 # OR specify port manually
-python semaphore_controller.py --port /dev/cu.usbmodem14101
+python photobooth.py --port /dev/cu.usbmodem14101
 ```
 
 See `python/README.md` for more options and troubleshooting.
@@ -234,10 +234,10 @@ See `laravel/README.md` for detailed deployment configuration.
 
 ```bash
 # List ports
-python semaphore_controller.py --list-ports
+python photobooth.py --list-ports
 
 # Use the correct port
-python semaphore_controller.py --port /dev/cu.usbmodem14101
+python photobooth.py --port /dev/cu.usbmodem14101
 ```
 
 ### LEDs not lighting up

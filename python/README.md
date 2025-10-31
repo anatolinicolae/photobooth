@@ -42,34 +42,34 @@ pipenv shell
 
 **Basic usage** (auto-detects port):
 ```bash
-python semaphore_controller.py
+python photobooth.py
 ```
 
 **List available serial ports**:
 ```bash
-python semaphore_controller.py --list-ports
+python photobooth.py --list-ports
 ```
 
 **Specify custom port**:
 ```bash
 # macOS
-python semaphore_controller.py --port /dev/cu.usbmodem14101
+python photobooth.py --port /dev/cu.usbmodem14101
 
 # Windows
-python semaphore_controller.py --port COM5
+python photobooth.py --port COM5
 
 # Linux
-python semaphore_controller.py --port /dev/ttyUSB0
+python photobooth.py --port /dev/ttyUSB0
 ```
 
 **Customize countdown timing**:
 ```bash
-python semaphore_controller.py --delay 1.5
+python photobooth.py --delay 1.5
 ```
 
 **Full options**:
 ```bash
-python semaphore_controller.py --port /dev/cu.usbmodem14101 --baud 9600 --delay 1.0
+python photobooth.py --port /dev/cu.usbmodem14101 --baud 9600 --delay 1.0
 ```
 
 ### Exit the program
@@ -135,5 +135,5 @@ This installs:
 ### Run linting
 
 ```bash
-pipenv run pylint semaphore_controller.py
+pipenv run pylint photobooth.py
 ```

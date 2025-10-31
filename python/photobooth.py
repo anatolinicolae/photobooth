@@ -7,7 +7,7 @@ It listens for a "START" command from the Arduino via serial communication,
 then sends back the countdown sequence: "3", "2", "1", "GO".
 
 Usage:
-    python semaphore_controller.py [--port PORT] [--baud BAUD]
+    python photobooth.py [--port PORT] [--baud BAUD]
 
 Arguments:
     --port PORT    Serial port (default: /dev/cu.usbserial on macOS, COM3 on Windows)
