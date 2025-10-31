@@ -160,7 +160,11 @@ class PhotoboothController:
         
         for i, cam in enumerate(self.cameras):
             if cam is not None and cam.isOpened():
-                # Capture frame
+                # Flush camera buffer by reading and discarding one frame
+                # This ensures we get the most recent frame, not a buffered one
+                cam.grab()
+                
+                # Now capture the fresh frame
                 ret, frame = cam.read()
                 
                 if ret:
